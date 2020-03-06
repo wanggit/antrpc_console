@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Data
-class InterfaceDTO implements Serializable {
+public class InterfaceDTO implements Serializable {
 
     private static final long serialVersionUID = 4932052226308856680L;
     private String className;
@@ -21,7 +21,7 @@ class InterfaceDTO implements Serializable {
 
     private List<InterfaceMethodDTO> interfaceMethodDTOS = new ArrayList<>();
 
-    public void addInterfaceMethodDTO(InterfaceMethodDTO interfaceMethodDTO) {
+    void addInterfaceMethodDTO(InterfaceMethodDTO interfaceMethodDTO) {
         interfaceMethodDTOS.add(interfaceMethodDTO);
     }
 

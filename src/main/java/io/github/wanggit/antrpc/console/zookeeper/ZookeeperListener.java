@@ -56,7 +56,7 @@ public class ZookeeperListener {
         treeCache.start();
     }
 
-    private void doEventOnType(TreeCacheEvent event) {
+    private void doEventOnType(TreeCacheEvent event) throws Exception {
         ChildData childData = event.getData();
         ZkNodeType.Type type = ZkNodeType.getType(childData.getPath());
         if (ZkNodeType.Type.INTERFACE.equals(type)) {
@@ -64,7 +64,7 @@ public class ZookeeperListener {
             String json = new String(data, Charset.forName("UTF-8"));
             InterfaceNodeDataBean interfaceNodeDataBean =
                     JSONObject.parseObject(json, InterfaceNodeDataBean.class);
-            fullClassInfo(interfaceNodeDataBean, childData.getPath());
+            fullClassInfo(interfaceNodeDataBean, childData.getPath(), event.getType());
             if (TreeCacheEvent.Type.NODE_ADDED.equals(event.getType())) {
                 interfaceContainer.addInterface(interfaceNodeDataBean, childData.getPath());
             } else if (TreeCacheEvent.Type.NODE_UPDATED.equals(event.getType())) {
@@ -75,12 +75,18 @@ public class ZookeeperListener {
         }
     }
 
-    private void fullClassInfo(InterfaceNodeDataBean interfaceNodeDataBean, String path) {
-        path = path.replaceFirst("/" + ConstantValues.ZK_ROOT_NODE_NAME + "/", "");
-        String[] tmps = path.split("/");
-        String host = tmps[0];
-        String className = tmps[1];
-        interfaceNodeDataBean.setClassName(className);
-        interfaceNodeDataBean.setHost(host);
+    private void fullClassInfo(
+            InterfaceNodeDataBean interfaceNodeDataBean, String path, TreeCacheEvent.Type type)
+            throws Exception {
+        if (!TreeCacheEvent.Type.NODE_REMOVED.equals(type)) {
+            int idx = path.lastIndexOf("/");
+            String parentPath = path.substring(0, idx);
+            String className = path.substring(idx + 1);
+            byte[] bytes = curatorFramework.getData().forPath(parentPath);
+            String json = new String(bytes, Charset.forName("UTF-8"));
+            IpNodeDataBean ipNodeDataBean = JSONObject.parseObject(json, IpNodeDataBean.class);
+            interfaceNodeDataBean.setClassName(className);
+            interfaceNodeDataBean.setHost(ipNodeDataBean.getAppName());
+        }
     }
 }
