@@ -1,8 +1,12 @@
 package io.github.wanggit.antrpc.console.zookeeper;
 
+import io.github.wanggit.antrpc.console.zookeeper.utils.ArrayClassNameUtil;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.DigestUtils;
 
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,6 +19,28 @@ public class RegisterBeanMethod {
     private int limit;
 
     private int durationInSeconds;
+
+    private String fullName;
+
+    private String methodId;
+
+    void generateMethodId() {
+        StringBuilder buffer = new StringBuilder(methodName);
+        for (String parameterTypeName : parameterTypeNames) {
+            buffer.append(parameterTypeName);
+        }
+        methodId = DigestUtils.md5DigestAsHex(buffer.toString().getBytes(Charset.forName("UTF-8")));
+    }
+
+    public String getFullName() {
+        // 清理一下参数类型
+        List<String> types = new ArrayList<>(parameterTypeNames.size());
+        parameterTypeNames.forEach(
+                it -> {
+                    types.add(ArrayClassNameUtil.replaceArrayClassName(it));
+                });
+        return methodName + "(" + StringUtils.join(types, ", ") + ")";
+    }
 
     @Override
     public String toString() {

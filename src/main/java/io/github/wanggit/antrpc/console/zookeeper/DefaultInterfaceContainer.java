@@ -37,6 +37,7 @@ public class DefaultInterfaceContainer implements IInterfaceContainer {
             interfaceMethodDTO.setLimit(registerBeanMethod.getLimit());
             interfaceMethodDTO.setMethodName(registerBeanMethod.getMethodName());
             interfaceMethodDTO.setParameterTypeNames(registerBeanMethod.getParameterTypeNames());
+            interfaceMethodDTO.generateMethodId();
             if (log.isDebugEnabled()) {
                 log.debug("save to local --> " + interfaceMethodDTO.toString());
             }

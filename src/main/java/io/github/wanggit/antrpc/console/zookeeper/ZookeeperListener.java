@@ -1,6 +1,7 @@
 package io.github.wanggit.antrpc.console.zookeeper;
 
 import com.alibaba.fastjson.JSONObject;
+import io.github.wanggit.antrpc.commons.constants.ConstantValues;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -26,6 +27,8 @@ public class ZookeeperListener {
 
     @Autowired private IInterfaceContainer interfaceContainer;
 
+    @Autowired private ISubscribeContainer subscribeContainer;
+
     @PostConstruct
     public void init() throws Exception {
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 5, 30000);
@@ -36,9 +39,9 @@ public class ZookeeperListener {
                         .retryPolicy(retryPolicy)
                         .build();
         curatorFramework.start();
-        TreeCache treeCache =
+        TreeCache providerRootNodeTreeCache =
                 new TreeCache(curatorFramework, "/" + ConstantValues.ZK_ROOT_NODE_NAME);
-        treeCache
+        providerRootNodeTreeCache
                 .getListenable()
                 .addListener(
                         new TreeCacheListener() {
@@ -49,14 +52,46 @@ public class ZookeeperListener {
                                         || TreeCacheEvent.Type.NODE_UPDATED.equals(event.getType())
                                         || TreeCacheEvent.Type.NODE_REMOVED.equals(
                                                 event.getType())) {
-                                    doEventOnType(event);
+                                    doProviderEventOnType(event);
                                 }
                             }
                         });
-        treeCache.start();
+        providerRootNodeTreeCache.start();
+
+        TreeCache subscribeRootNodeTreeCache =
+                new TreeCache(curatorFramework, "/" + ConstantValues.ZK_ROOT_SUBSCRIBE_NODE_NAME);
+        subscribeRootNodeTreeCache
+                .getListenable()
+                .addListener(
+                        new TreeCacheListener() {
+                            @Override
+                            public void childEvent(CuratorFramework client, TreeCacheEvent event)
+                                    throws Exception {
+                                if (TreeCacheEvent.Type.NODE_ADDED.equals(event.getType())
+                                        || TreeCacheEvent.Type.NODE_REMOVED.equals(
+                                                event.getType())) {
+                                    doSubscribeEventOnType(event);
+                                }
+                            }
+                        });
+        subscribeRootNodeTreeCache.start();
     }
 
-    private void doEventOnType(TreeCacheEvent event) throws Exception {
+    private void doSubscribeEventOnType(TreeCacheEvent event) throws Exception {
+        ChildData childData = event.getData();
+        ZkNodeType.Type type = ZkNodeType.getType(childData.getPath());
+        if (ZkNodeType.Type.INTERFACE.equals(type)) {
+            String json = new String(childData.getData(), Charset.forName("UTF-8"));
+            SubscribeNode subscribeNode = JSONObject.parseObject(json, SubscribeNode.class);
+            if (TreeCacheEvent.Type.NODE_ADDED.equals(event.getType())) {
+                subscribeContainer.addSubscribeNode(subscribeNode);
+            } else if (TreeCacheEvent.Type.NODE_REMOVED.equals(event.getType())) {
+                subscribeContainer.deleteSubscribeNode(subscribeNode);
+            }
+        }
+    }
+
+    private void doProviderEventOnType(TreeCacheEvent event) throws Exception {
         ChildData childData = event.getData();
         ZkNodeType.Type type = ZkNodeType.getType(childData.getPath());
         if (ZkNodeType.Type.INTERFACE.equals(type)) {

@@ -11,9 +11,13 @@
     </title>
     <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport'/>
     <!--     Fonts and icons     -->
-    <link rel="stylesheet" type="text/css"
-          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/google_css.css"/>
+    <!--
+        <link rel="stylesheet" type="text/css"
+              href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
+    -->
+    <link rel="stylesheet" href="/css/font-awesome.min.css"/>
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">-->
     <!-- CSS Files -->
     <link href="/css/material-dashboard.css?v=2.1.2" rel="stylesheet"/>
     <!-- CSS Just for demo purpose, don't include it in your project -->
@@ -90,8 +94,9 @@
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="form-group" style="width: 100% !important;">
-                                    <label class="bmd-label-floating">Search...</label>
-                                    <input type="text" name="name" id="search_box" class="form-control"/>
+                                    <label for="search_box" class="bmd-label-floating">Search...</label>
+                                    <input th:value="${condition}" type="text" name="name" id="search_box"
+                                           class="form-control"/>
                                 </div>
                             </div>
                         </div>
@@ -120,43 +125,53 @@
         <div class="content">
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-md-12">
+                    <div id="interfaceContainer" class="col-md-12">
                         <div class="card">
                             <div class="card-header card-header-primary">
                                 <h4 class="card-title ">服务列表</h4>
-                                <p class="card-category">搜索条件: <span th:text="${condition}"></span></p>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table">
                                         <thead class="text-primary">
-                                        <th>序号</th>
+                                        <th>#</th>
                                         <th>接口名</th>
-                                        <th>应用名</th>
-                                        <th>注册时间</th>
                                         <th></th>
                                         </thead>
                                         <tbody>
-                                        <tr th:each="it, itStat : ${interfaces}">
+                                        <tr th:each="it, itStat : ${interfaces}" th:id="${it.id}">
                                             <td th:text="${itStat.index + 1}"></td>
-                                            <td th:text="${it.className}"></td>
-                                            <td th:text="${it.host}"></td>
-                                            <td th:text="${T(io.github.wanggit.antrpc.console.web.utils.LongToDateUtil).toDate(it.registerTs)}"></td>
+                                            <td class="class-name-box" th:text="${it.className}"></td>
                                             <td>
-                                                <div style="display: none;">
-                                                    <div class="row" th:each="md, mdStat: ${it.interfaceMethodDTOS}">
+                                                <div style="display: none;" th:id="${it.id + '_methods'}">
+                                                    <div class="row" th:each="md, mdStat: ${it.interfaceMethodDTOS}"
+                                                         th:attr="method_id=${md.methodId}, clazzId=${it.id}">
                                                         <div class="col-md-1" th:text="${mdStat.index + 1}"></div>
-                                                        <div class="col-md-6" th:text="${md.methodName}"></div>
-                                                        <div class="col-md-3" th:text="${md.parameterTypeNames}"></div>
+                                                        <div class="col-md-6" th:text="${md.fullName}"></div>
                                                         <div class="col-md-3">
-                                                            <span th:text="${md.limit}"></span> times in <span
-                                                                th:text="${md.durationInSeconds}"></span> seconds
+                                                            <span th:text="${md.limit}"></span>/<span
+                                                                th:text="${md.durationInSeconds}"></span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <a th:href="'javascript:method_list(\''+${it.path}+'\')'" title="展开方法">
-                                                    <i class="material-icons">chrome_reader_mode</i>
-                                                </a>
+                                                <button type="button" class="btn btn-info btn-sm show-methods-icon">
+                                                    方法<i class="material-icons">expand_more</i>
+                                                </button>
+                                                <div style="display: none" th:id="${it.id + '_provider'}">
+                                                    <div class="row" th:each="hts, htsStat: ${it.hosts}"
+                                                         th:attr="clazzId=${it.id}">
+                                                        <div class="col-md-4" th:text="${htsStat.index + 1}"></div>
+                                                        <div class="col-md-4" th:text="${hts.host}"></div>
+                                                        <div class="col-md-4"
+                                                             th:text="${T(io.github.wanggit.antrpc.console.web.utils.LongToDateUtil).toDate(hts.registerTs)}"></div>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-info btn-sm show-service-provider">
+                                                    提供者
+                                                </button>
+                                                <button type="button" class="btn btn-info btn-sm show-service-consumer">
+                                                    消费者
+                                                </button>
                                             </td>
                                         </tr>
                                         </tbody>
@@ -165,24 +180,65 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3"></div>
+                    <div id="hostContainer" class="display_none">
+
+                    </div>
                 </div>
             </div>
         </div>
-        <footer class="footer">
-            <div class="container-fluid">
-                <div class="copyright float-right">
-                    &copy;
-                    <script>
-                        document.write(new Date().getFullYear())
-                    </script>
-                    , made with <i class="material-icons">favorite</i> by
-                    <a href="https://www.creative-tim.com" target="_blank">Creative Tim</a> for a better web.
-                </div>
-            </div>
-        </footer>
     </div>
 </div>
+
+<!-- 测试模态框 -->
+<div class="modal" id="test_modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-bg">
+                <h4 class="modal-title" id="methodName"></h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-5 text-left font-weight-bold">选择服务提供者</div>
+                        <div class="col-md-7 text-left font-weight-bold">参数</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <ul class="list-group" id="service_provider_box">
+                                <!--<li class="list-group-item">
+                                    <div class="custom-control custom-radio">
+                                        <input type="radio" id="customRadio1" name="customRadio"
+                                               class="custom-control-input" checked>
+                                        <label class="custom-control-label" for="customRadio1">Toggle this custom
+                                            radio</label>
+                                    </div>
+                                </li>-->
+                            </ul>
+                        </div>
+                        <div class="col-md-7">
+                            <textarea id="arguments_box" rows="18" style="width: 100%;"></textarea>
+                        </div>
+                    </div>
+                    <hr/>
+                    <div class="row">
+                        <div class="col-md-12 text-left font-weight-bold">执行结果:</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <pre id="execute_method_result"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info btn-sm" id="run_method_test">测试</button>
+                <button type="button" class="btn btn-info btn-sm" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!--   Core JS Files   -->
 <script src="/js/core/jquery.min.js"></script>
 <script src="/js/core/popper.min.js"></script>
@@ -213,7 +269,7 @@
 <!--  Plugin for the Sliders, full documentation here: http://refreshless.com/nouislider/ -->
 <script src="/js/plugins/nouislider.min.js"></script>
 <!-- Include a polyfill for ES6 Promises (optional) for IE11, UC Browser and Android browser support SweetAlert -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.4.1/core.js"></script>
+<script src="/js/ajax_libs_core-js/core.js"></script>
 <!-- Library for adding dinamically elements -->
 <script src="/js/plugins/arrive.min.js"></script>
 <!--  Google Maps Plugin
@@ -227,6 +283,187 @@
 <script src="/js/material-dashboard.js?v=2.1.2" type="text/javascript"></script>
 <!-- Material Dashboard DEMO methods, don't include it in your project! -->
 <script src="/demo/demo.js"></script>
+<script>
+    $(function () {
+
+        // 关闭服务提供者面板
+        $("#hostContainer").on("click", ".close_provider_btn", function () {
+            var $hostContainer = $("#hostContainer");
+            var $interfaceContainer = $("#interfaceContainer");
+            $hostContainer.addClass("display_none");
+            $hostContainer.removeClass("col-md-5");
+            $interfaceContainer.removeClass("col-md-7");
+            $interfaceContainer.addClass("col-md-12")
+        });
+
+        $("#run_method_test").click(function () {
+            var providerId = $('input[name="service_providers"]:checked').attr("id");
+            var provider = $("label[for='" + providerId + "']").text();
+            var arguments = $("#arguments_box").val();
+            var clazzId = $("#test_modal").attr("clazzId");
+            var className = $("#" + clazzId).find("td.class-name-box").text();
+            var methodName = $("#methodName").text();
+            $.ajax({
+                url: "/interface/testInvoke",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    "provider": provider,
+                    "className": className,
+                    "methodName": methodName,
+                    "arguments": arguments
+                },
+                success: function (response) {
+                    if (response.code === 2000) {
+                        $("#execute_method_result").text(response.data);
+                    } else {
+                        $("#execute_method_result").text(response.message);
+                    }
+                }
+            });
+        });
+
+        // 测试接口方法
+        $("#interfaceContainer").on("click", ".test-interface-method", function () {
+            var clazzId = $(this).parents("tr").attr("clazzId");
+            var methodName = $(this).parent().prev().prev().text();
+            $("#test_modal").attr("clazzId", clazzId).attr("methodName", methodName).modal("show");
+        });
+
+        $("#test_modal").on("show.bs.modal", function () {
+            $("#execute_method_result").text("");
+            $("#arguments_box").val("");
+            $("#service_provider_box").html("");
+            $("#methodName").text($(this).attr("methodName"));
+            var clazzId = $(this).attr("clazzId");
+            var $providerDiv = $("#" + clazzId + "_provider");
+            var $rows = $providerDiv.find("div.row");
+            for (var i = 0; i < $rows.length; i++) {
+                var provider = $($rows[i]).find("div:eq(1)").text();
+                var html = "<li class='list-group-item'>" +
+                    "<div class='custom-control custom-radio'>" +
+                    "<input type='radio' id='provider" + i + "' name='service_providers' class='custom-control-input' " + (i === 0 ? "checked" : "") + "/>" +
+                    "<label class='custom-control-label' for='provider" + i + "'>" + provider + "</label></div></li>";
+                $(html).appendTo($("#service_provider_box"));
+            }
+        });
+
+        // 显示接口的服务消费者
+        $(".show-service-consumer").click(function () {
+            fullDataToHostContainer.call(this, function () {
+                var interfaceName = $(this).parents("td").prev("td.class-name-box").text();
+                var html = "<button type='button' class='close float-right close_provider_btn'>&times;</button>" +
+                    "<div class='card'><div class='card-header card-header-info'><h4 class='card-title'>服务消费者</h4><span>" + interfaceName + "</span></div>";
+                html += "<div class='card-body table-responsive'>" +
+                    "<table class='table'>" +
+                    "<thead class='text-primary'><th>#</th><th>节点</th><th>订阅时间</th></thead>" +
+                    "<tbody>";
+                $.ajax({
+                    url: "/interface/subscribes",
+                    data: {
+                        "clazz": interfaceName
+                    },
+                    type: "POST",
+                    async: false,
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.code === 2000) {
+                            var datas = response.data;
+                            for (var i = 0; i < datas.length; i++) {
+                                var tr = "<tr>";
+                                tr += "<td>" + (i + 1) + "</td>";
+                                tr += "<td>" + datas[i].host + "</td>";
+                                tr += "<td>" + datas[i].tsStr + "</td>";
+                                tr += "</tr>";
+                                html += tr;
+                            }
+                        }
+                    }
+                });
+                html += "</tbody></table></div></div>";
+                return html;
+            });
+        });
+
+        // 显示接口的服务提供者
+        $(".show-service-provider").click(function () {
+            fullDataToHostContainer.call(this, function () {
+                var title = $(this).parents("td").prev("td.class-name-box").text();
+                var $dataDiv = $(this).prev("div");
+                var $rows = $dataDiv.find(".row");
+                var html = "<button type='button' class='close float-right close_provider_btn'>&times;</button>" +
+                    "<div class='card'><div class='card-header card-header-info'><h4 class='card-title'>服务提供者</h4><span>" + title + "</span></div>";
+                html += "<div class='card-body table-responsive'>" +
+                    "<table class='table'>" +
+                    "<thead class='text-primary'><th>#</th><th>节点</th><th>注册时间</th></thead>" +
+                    "<tbody>";
+                $rows.each(function () {
+                    var tr = "<tr>";
+                    var $cols = $(this).find("div");
+                    $cols.each(function () {
+                        tr += "<td>" + $(this).text() + "</td>";
+                    });
+                    tr += "</tr>";
+                    html += tr;
+                });
+                html += "</tbody></table></div></div>";
+                return html;
+            });
+        });
+
+        // 向hostContainer填充数据
+        function fullDataToHostContainer(fetchDataFun) {
+            var $hostContainer = $("#hostContainer");
+            var $interfaceContainer = $("#interfaceContainer");
+            var html = fetchDataFun.call(this);
+            $hostContainer.html(html);
+            $hostContainer.removeClass("display_none");
+            $hostContainer.addClass("col-md-5");
+            $interfaceContainer.removeClass("col-md-12");
+            $interfaceContainer.addClass("col-md-7");
+        }
+
+        // 显示接口下的方法
+        $(".show-methods-icon").click(function () {
+            var targetId = $(this).attr("methods_target");
+            if (targetId === undefined) {
+                targetId = "rnd_" + Number(Math.random() * 100000).toFixed();
+                var $dataDiv = $(this).prev("div");
+                var html = "<div class='table-responsive'><table class='table'><thead class='text-primary'><th>#</th><th>方法</th><th>限流(次/秒)</th><th></th></thead><tbody>";
+                var $rows = $dataDiv.find(".row");
+                $rows.each(function () {
+                    var tr = "<tr method_id='" + $(this).attr("method_id") + "' clazzId='" + $(this).attr("clazzId") + "'>";
+                    var $cols = $(this).find("div");
+                    $cols.each(function () {
+                        tr += "<td>" + $(this).text() + "</td>";
+                    });
+                    tr += "<td><button type='button' class='btn btn-sm btn-info test-interface-method'>测试</button></td>";
+                    tr += "</tr>";
+                    html += tr;
+                });
+                html += "</tbody></table></div>";
+                var methodTr = "<tr id='" + targetId + "'><td colspan='3'>" + html + "</td></tr>";
+                $(methodTr).insertAfter($(this).parents("tr"));
+                $(this).attr("methods_target", targetId);
+                $(this).attr("methods_shown", "true");
+                $(this).find("i.material-icons").text("expand_less");
+            } else {
+                var shown = $(this).attr("methods_shown");
+                if (shown === "true") {
+                    $("#" + targetId).hide("fast");
+                    $(this).attr("methods_shown", "false");
+                    $(this).find("i.material-icons").text("expand_more");
+                } else {
+                    $(this).attr("methods_shown", "true");
+                    $("#" + targetId).show("fast");
+                    $(this).find("i.material-icons").text("expand_less");
+                }
+            }
+        });
+
+
+    });
+</script>
 </body>
 
 </html>

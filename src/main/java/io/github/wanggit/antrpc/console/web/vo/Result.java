@@ -28,9 +28,7 @@ public class Result implements Serializable {
     }
 
     public static Result error() {
-        Result result = new Result();
-        result.setCode(ResultConstants.ERROR);
-        return result;
+        return error(ResultConstants.DEFAULT_ERROR);
     }
 
     public static Result error(String message) {
