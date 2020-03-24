@@ -3,6 +3,7 @@ package io.github.wanggit.antrpc.console.invoker;
 import io.github.wanggit.antrpc.commons.bean.*;
 import io.github.wanggit.antrpc.commons.codec.cryption.ICodec;
 import io.github.wanggit.antrpc.commons.codec.serialize.ISerializer;
+import io.github.wanggit.antrpc.commons.codec.serialize.json.JsonSerializer;
 import io.github.wanggit.antrpc.commons.constants.ConstantValues;
 import io.github.wanggit.antrpc.commons.future.ReadClientFuture;
 import io.github.wanggit.antrpc.console.ConsoleConstantValues;
@@ -46,10 +47,7 @@ public class DefaultServiceProviderInvoker implements IServiceProviderInvoker {
             codec = (ICodec) codecClazz.newInstance();
             codec.setKey(codecKey);
         }
-        Class<?> serializeClazz =
-                ClassUtils.forName(
-                        serializeType, DefaultServiceProviderInvoker.class.getClassLoader());
-        serializer = (ISerializer) serializeClazz.newInstance();
+        serializer = new JsonSerializer();
         serializer.setConfigs(new HashMap<>());
         serializer.init();
     }
@@ -65,6 +63,7 @@ public class DefaultServiceProviderInvoker implements IServiceProviderInvoker {
         RpcProtocol protocol = new RpcProtocol();
         protocol.setCmdId(IdGenHelper.getInstance().getId());
         protocol.setType(ConstantValues.BIZ_TYPE);
+        protocol.setSerializer(ConstantValues.JSON_SERIALIZER);
         protocol.setData(serializer.serialize(requestBean));
         IClient client;
         try {

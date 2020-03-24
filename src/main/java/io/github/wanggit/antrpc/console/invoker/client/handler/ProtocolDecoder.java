@@ -37,7 +37,8 @@ public class ProtocolDecoder extends LengthFieldBasedFrameDecoder {
         byte type = byteBuf.readByte();
         byte hasCodec = byteBuf.readByte();
         byte hasZip = byteBuf.readByte();
-        byteBuf.readBytes(9);
+        byte serialzer = byteBuf.readByte();
+        byteBuf.readBytes(8);
         int dataLength = byteBuf.readInt();
         if (byteBuf.readableBytes() < dataLength) {
             byteBuf.resetReaderIndex();
@@ -62,6 +63,7 @@ public class ProtocolDecoder extends LengthFieldBasedFrameDecoder {
         protocol.setZip(hasZip);
         protocol.setCodec(hasCodec);
         protocol.setType(type);
+        protocol.setSerializer(serialzer);
         protocol.setData(data);
         return protocol;
     }

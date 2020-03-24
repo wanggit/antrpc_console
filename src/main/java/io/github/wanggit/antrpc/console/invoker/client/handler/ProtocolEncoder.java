@@ -63,7 +63,8 @@ public class ProtocolEncoder extends MessageToByteEncoder<RpcProtocol> {
         out.writeByte(msg.getType());
         out.writeByte(msg.getCodec());
         out.writeByte(msg.getZip());
-        out.writeBytes(new byte[9]);
+        out.writeByte(msg.getSerializer());
+        out.writeBytes(new byte[8]);
         out.writeInt(msg.getData().length);
         out.writeBytes(msg.getData());
     }

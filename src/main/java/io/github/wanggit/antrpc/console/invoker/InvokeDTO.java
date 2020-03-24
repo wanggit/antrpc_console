@@ -2,6 +2,7 @@ package io.github.wanggit.antrpc.console.invoker;
 
 import com.alibaba.fastjson.JSONObject;
 import io.github.wanggit.antrpc.commons.bean.Host;
+import io.github.wanggit.antrpc.commons.codec.serialize.json.JsonSerializer;
 import io.github.wanggit.antrpc.commons.utils.CastValueTo;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.springframework.util.ClassUtils;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -52,10 +54,15 @@ public class InvokeDTO implements Serializable {
                                         return ClassUtils.forName(
                                                 it, InvokeDTO.class.getClassLoader());
                                     } catch (ClassNotFoundException e) {
-                                        if (log.isErrorEnabled()) {
-                                            log.error("not found the class.", e);
+                                        if (log.isWarnEnabled()) {
+                                            log.warn(
+                                                    it
+                                                            + " not found the class. will use "
+                                                            + JsonSerializer.class.getName()
+                                                            + " repeat it.",
+                                                    e);
                                         }
-                                        return null;
+                                        return Map.class;
                                     }
                                 })
                         .filter(Objects::nonNull)
