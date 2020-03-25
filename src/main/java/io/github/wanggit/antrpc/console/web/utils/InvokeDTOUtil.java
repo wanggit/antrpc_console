@@ -1,36 +1,21 @@
-package io.github.wanggit.antrpc.console.invoker;
+package io.github.wanggit.antrpc.console.web.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import io.github.wanggit.antrpc.commons.bean.Host;
 import io.github.wanggit.antrpc.commons.codec.serialize.json.JsonSerializer;
 import io.github.wanggit.antrpc.commons.utils.CastValueTo;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ClassUtils;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Data
-public class InvokeDTO implements Serializable {
+public abstract class InvokeDTOUtil {
 
-    private static final long serialVersionUID = -8915580980020559039L;
-
-    private String provider;
-
-    private String className;
-
-    private String methodName;
-
-    private String arguments;
-
-    private List<String> parameterTypeNames;
-
-    Host getHost() {
+    public static Host getHost(String provider) {
         if (null == provider) {
             throw new IllegalArgumentException("provider is null.");
         }
@@ -42,7 +27,7 @@ public class InvokeDTO implements Serializable {
         return Host.parse(tmps[1]);
     }
 
-    Object[] getArgumentValues() {
+    public static Object[] getArgumentValues(List<String> parameterTypeNames, String arguments) {
         if (null == parameterTypeNames || parameterTypeNames.isEmpty()) {
             return new Object[0];
         }
@@ -52,7 +37,7 @@ public class InvokeDTO implements Serializable {
                                 it -> {
                                     try {
                                         return ClassUtils.forName(
-                                                it, InvokeDTO.class.getClassLoader());
+                                                it, InvokeDTOUtil.class.getClassLoader());
                                     } catch (ClassNotFoundException e) {
                                         if (log.isWarnEnabled()) {
                                             log.warn(

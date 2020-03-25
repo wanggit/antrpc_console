@@ -1,7 +1,8 @@
 package io.github.wanggit.antrpc.console.web;
 
-import io.github.wanggit.antrpc.console.invoker.IServiceProviderInvoker;
-import io.github.wanggit.antrpc.console.invoker.InvokeDTO;
+import io.github.wanggit.antrpc.commons.generic.IServiceProviderInvoker;
+import io.github.wanggit.antrpc.commons.generic.InvokeDTO;
+import io.github.wanggit.antrpc.console.web.utils.InvokeDTOUtil;
 import io.github.wanggit.antrpc.console.web.vo.Result;
 import io.github.wanggit.antrpc.console.zookeeper.IInterfaceContainer;
 import io.github.wanggit.antrpc.console.zookeeper.ISubscribeContainer;
@@ -64,11 +65,12 @@ public class InterfaceController {
         }
         InterfaceMethodDTO methodDTO = methods.get(0);
         InvokeDTO invokeDTO = new InvokeDTO();
-        invokeDTO.setArguments(arguments);
-        invokeDTO.setClassName(className);
+        invokeDTO.setArgumentValues(
+                InvokeDTOUtil.getArgumentValues(methodDTO.getParameterTypeNames(), arguments));
+        invokeDTO.setInterfaceName(className);
         invokeDTO.setMethodName(methodDTO.getMethodName());
         invokeDTO.setParameterTypeNames(methodDTO.getParameterTypeNames());
-        invokeDTO.setProvider(provider);
+        invokeDTO.setHost(InvokeDTOUtil.getHost(provider));
         try {
             return Result.ok(serviceProviderInvoker.invoke(invokeDTO));
         } catch (Exception e) {
