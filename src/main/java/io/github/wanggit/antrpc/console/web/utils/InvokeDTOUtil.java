@@ -1,5 +1,6 @@
 package io.github.wanggit.antrpc.console.web.utils;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.github.wanggit.antrpc.commons.bean.Host;
 import io.github.wanggit.antrpc.commons.codec.serialize.json.JsonSerializer;
@@ -8,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ClassUtils;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -43,11 +43,11 @@ public abstract class InvokeDTOUtil {
                                             log.warn(
                                                     it
                                                             + " not found the class. will use "
-                                                            + JsonSerializer.class.getName()
-                                                            + " repeat it.",
-                                                    e);
+                                                            + JSON.class.getName()
+                                                            + " repeat it. use "
+                                                            + JsonSerializer.class.getName());
                                         }
-                                        return Map.class;
+                                        return JSON.class;
                                     }
                                 })
                         .filter(Objects::nonNull)
